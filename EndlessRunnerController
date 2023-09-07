@@ -1,0 +1,60 @@
+using UnityEngine;
+
+public class EndlessRunnerController : MonoBehaviour
+{
+    public float initialSpeed = 5.0f; // Adjust the initial speed as needed
+    public float maxSpeed = 10.0f; // Adjust the maximum speed as needed
+    public float acceleration = 5.0f; // Adjust the acceleration as needed
+    public float deacceleration = 5.0f; // Adjust the deacceleration as needed
+    public float gravity = 9.81f; // Adjust the gravity strength as needed
+    public float jumpForce = 5.0f; // Adjust the jump force as needed
+    public Transform groundCheck;
+    public LayerMask groundLayer;
+    public float groundCheckRadius = 0.2f;
+
+    private CharacterController controller;
+    private Vector3 moveDirection;
+    private bool isGrounded = false;
+    private bool isSpeedActivated = false;
+
+    private void Start()
+    {
+        controller = GetComponent<CharacterController>();
+        moveDirection = Vector3.zero;
+    }
+
+    private void Update()
+    {
+        // Check if the character is grounded.
+        isGrounded = Physics.CheckSphere(groundCheck.position, groundCheckRadius, groundLayer);
+
+        // Toggle speed mode with the 'Z' key
+        if (Input.GetKeyDown(KeyCode.Z))
+        {
+            isSpeedActivated = !isSpeedActivated;
+        }
+
+        // Calculate movement direction (forward)
+        float targetSpeed = isSpeedActivated ? maxSpeed : 0.0f;
+        moveDirection.z = Mathf.MoveTowards(moveDirection.z, targetSpeed, Time.deltaTime * (isSpeedActivated ? acceleration : deacceleration));
+
+        // Apply gravity
+        if (!isGrounded)
+        {
+            moveDirection.y -= gravity * Time.deltaTime;
+        }
+        else
+        {
+            moveDirection.y = -2f; // A small negative value to ensure the character sticks to the ground
+        }
+
+        // Jumping with the 'Space' key
+        if (isGrounded && Input.GetButtonDown("Jump"))
+        {
+            moveDirection.y = Mathf.Sqrt(jumpForce * -2f * gravity);
+        }
+
+        // Move the character
+        controller.Move(moveDirection * Time.deltaTime);
+    }
+}
