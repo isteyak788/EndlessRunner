@@ -1,0 +1,50 @@
+using UnityEngine;
+
+public class EndlessRunnerController : MonoBehaviour
+{
+    [Header("Run Settings")]
+    public float runMaxSpeed = 7.0f; // Maximum speed during a run
+    public float runAcceleration = 10.0f; // Acceleration when starting to run
+    public float runDeacceleration = 10.0f; // Deacceleration when stopping running
+    public KeyCode runKey = KeyCode.LeftShift; // Key to activate/deactivate running
+
+    private CharacterController controller;
+    private Vector3 moveDirection;
+    private bool isRunning = false;
+
+    private Transform playerCamera; // Reference to the player's camera for camera-relative movement
+
+    private void Start()
+    {
+        controller = GetComponent<CharacterController>();
+        moveDirection = Vector3.zero;
+        playerCamera = Camera.main.transform; // Get the main camera's transform
+    }
+
+    private void Update()
+    {
+        // Toggle running with the Left Shift key
+        if (Input.GetKeyDown(runKey))
+        {
+            isRunning = true;
+        }
+        else if (Input.GetKeyUp(runKey))
+        {
+            isRunning = false;
+        }
+
+        // Calculate movement direction (camera-relative)
+        float horizontalInput = Input.GetAxis("Horizontal");
+        float verticalInput = Input.GetAxis("Vertical");
+
+        Vector3 cameraRight = playerCamera.right;
+        cameraRight.y = 0.0f;
+        cameraRight.Normalize();
+
+        Vector3 move = cameraRight * horizontalInput + playerCamera.forward * verticalInput;
+        moveDirection = Vector3.Lerp(moveDirection, move.normalized * (isRunning ? runMaxSpeed : 0.0f), Time.deltaTime * (isRunning ? runAcceleration : runDeacceleration));
+
+        // Move the character
+        controller.Move(moveDirection * Time.deltaTime);
+    }
+}
